@@ -97,9 +97,9 @@ public class TerrainGenerator : MonoBehaviour
         for (int x = 0; x < chunkSize; x++)
         {
             for (int z = 0; z < chunkSize; z++)
-            {
-                // Calculate the vertex position
-                vertices[x + z * chunkSize] = new Vector3(x, 0, z) + GetChunkOffset(chunkCoordinates);
+            {                
+            float height = maxHeight * Mathf.PerlinNoise((chunkCoordinates.x + x) * 0.1f, (chunkCoordinates.y + z) * 0.1f);
+            vertices[x + z * chunkSize] = new Vector3(x, height, z) + GetChunkOffset(chunkCoordinates);
 
                 // Calculate the triangle indices
                 if (x < chunkSize - 1 && z < chunkSize - 1)
