@@ -135,9 +135,13 @@ public class TerrainGenerator : MonoBehaviour
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
 
+        MeshCollider collider = GetComponent<MeshCollider>();
+        collider.sharedMesh = mesh;
+
         // Add the mesh to the dictionary and set it as the mesh for the game object
-        chunks.Add(chunkCoordinates, mesh);
         meshFilter.mesh = mesh;
+        chunks.Add(chunkCoordinates, mesh);
+
     }
 
     Vector3 GetChunkOffset(Vector2Int chunkCoordinates)

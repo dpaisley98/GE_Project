@@ -23,11 +23,29 @@ public class PlayerController : MonoBehaviour
     // The horizontal rotation of the player
     private float yaw = 0.0f;
 
+    // The rigidbody component
+    private Rigidbody rigidbody;
+
+    // The force of gravity
+    public float gravity = -9.81f;
+
+    // The jump force
+    public float jumpForce = 5.0f;
+
+    // The current velocity of the player
+    private Vector3 velocity;
+
+    public LayerMask groundLayerMask;
+
+
     void Start()
     {
         // Lock the cursor to the center of the screen
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // Get the rigidbody component
+        rigidbody = GetComponent<Rigidbody>();
     }
 
     void Update()
@@ -47,10 +65,28 @@ public class PlayerController : MonoBehaviour
         float vertical = Input.GetAxis("Vertical");
 
         Vector3 moveDirection = transform.right * horizontal + transform.forward * vertical;
-        transform.position += moveDirection * moveSpeed * Time.deltaTime;
+        rigidbody.AddForce(moveDirection * moveSpeed, ForceMode.VelocityChange);
+
+        // Apply gravity to the player's velocity
+        velocity.y += gravity * Time.deltaTime;
+
+        // Jump if the player presses the space bar and is on the ground
+        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
+        {
+            velocity.y = jumpForce;
+        }
+
+        // Move the player based on their velocity
+        rigidbody.MovePosition(transform.position + velocity * Time.deltaTime);
 
         // Update the camera's position and rotation
         camera.transform.position = transform.position;
         camera.transform.rotation = transform.rotation;
+    }
+
+    bool IsGrounded()
+    {
+        // Check if the player is touching the ground
+        return Physics.Raycast(transform.position, -Vector3.up, 0.1f, groundLayerMask);
     }
 }
