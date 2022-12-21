@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    KeyCode jump = KeyCode.Space;
-    KeyCode shoot = KeyCode.Mouse0;
     [Header("Movement")]
     public float movementSpeed;
     public float terminalVelocity;
@@ -19,7 +17,6 @@ public class PlayerMovement : MonoBehaviour
     public Transform orientation;
     float horizontalInput, verticalInput;
     Vector3 movementDirection;
-    Vector3 recoilDirection;
     Rigidbody rigidBody;
 
     // Start is called before the first frame update

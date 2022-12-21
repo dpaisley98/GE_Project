@@ -13,20 +13,13 @@ public class TerrainGenerator : MonoBehaviour
     // The scale of the noise function
     public float noiseScale = 0.1f;
 
-    // The distance from the edge of the generated area at which new chunks are generated
-    public float chunkGenerationDistance = 10f;
+    public float heightIncrease;
 
     // The mesh filter and renderer components
     MeshFilter meshFilter;
     MeshRenderer meshRenderer;
 
-    // A dictionary to store the generated chunks of terrain
-    Dictionary<Vector2Int, Mesh> chunks;
 
-    // The position of the player
-    Vector3 playerPosition;
-
-    public GameObject player;
 
     void Start()
     {
@@ -34,126 +27,86 @@ public class TerrainGenerator : MonoBehaviour
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
 
-        // Initialize the dictionary
-        chunks = new Dictionary<Vector2Int, Mesh>();
-
         // Generate the initial chunks of terrain
-        GenerateChunksAroundPoint(Vector2Int.zero);
+        GenerateChunk(Vector2Int.zero);
     }
 
-    void Update()
-    {
-        // Update the player's position
-        playerPosition = player.transform.position;
-
-        // Check if new chunks need to be generated
-        Vector2Int currentChunk = GetChunkCoordinates(playerPosition);
-        if (NeedsChunkGeneration(currentChunk))
-        {
-            GenerateChunksAroundPoint(currentChunk);
-        }
-    }
-
-bool NeedsChunkGeneration(Vector2Int chunkCoordinates)
+void GenerateChunk(Vector2Int chunkCoordinates)
 {
-    // Check if the chunk at the given coordinates has already been generated
-    if (chunks.ContainsKey(chunkCoordinates))
-    {
-        return false;
-    }
+    // Create a new mesh for the chunk
+    Mesh mesh = new Mesh();
 
-    // Check if the distance from the player to the chunk is within the chunk generation distance
-    Vector3 chunkMin = GetChunkOffset(chunkCoordinates);
-    Vector3 chunkMax = chunkMin + Vector3.one * chunkSize;
-    if (playerPosition.x > chunkMin.x - chunkGenerationDistance &&
-        playerPosition.x < chunkMax.x + chunkGenerationDistance &&
-        playerPosition.z > chunkMin.z - chunkGenerationDistance &&
-        playerPosition.z < chunkMax.z + chunkGenerationDistance)
+    // Generate the vertices and triangles for the mesh
+    Vector3[] vertices = new Vector3[chunkSize * chunkSize];
+    int[] triangles = new int[(chunkSize - 1) * (chunkSize - 1) * 6];
+    float xOffset = Random.Range(-10000f, 10000);
+    float yOffset = Random.Range(-10000f, 10000);
+    noiseScale = Random.Range(0.1f, 0.15f);
+    for (int x = 0; x < chunkSize; x++)
     {
-        return true;
-    }
-
-    return false;
-}
-
-    void GenerateChunksAroundPoint(Vector2Int chunkCoordinates)
-    {
-        // Generate the chunk at the given coordinates
-        GenerateChunk(chunkCoordinates);
-        // Generate the chunks to the left, right, top, and bottom of the given chunk
-        GenerateChunk(chunkCoordinates + Vector2Int.left);
-        GenerateChunk(chunkCoordinates + Vector2Int.right);
-        GenerateChunk(chunkCoordinates + Vector2Int.up);
-        GenerateChunk(chunkCoordinates + Vector2Int.down);
-    }
-
-    void GenerateChunk(Vector2Int chunkCoordinates)
-    {
-        // Check if the chunk has already been generated
-        if (chunks.ContainsKey(chunkCoordinates))
+        for (int z = 0; z < chunkSize; z++)
         {
-            return;
-        }
-
-        // Create a new mesh for the chunk
-        Mesh mesh = new Mesh();
-
-        // Generate the vertices and triangles for the mesh
-        Vector3[] vertices = new Vector3[chunkSize * chunkSize];
-        int[] triangles = new int[(chunkSize - 1) * (chunkSize - 1) * 6];
-        float xOffset = Random.Range(-10000f, 10000);
-        float yOffset = Random.Range(-10000f, 10000);
-        for (int x = 0; x < chunkSize; x++)
-        {
-            for (int z = 0; z < chunkSize; z++)
+            // Calculate the height of the vertex
+            float height = maxHeight * Mathf.PerlinNoise((chunkCoordinates.x + x + xOffset) * noiseScale, (chunkCoordinates.y + z + yOffset) * noiseScale);
+            
+            // Add a mountain-like feature at the boundary of the chunk
+            if (x == 0 || x == chunkSize - 1 || z == 0 || z == chunkSize - 1)
             {
-                float height = maxHeight * Mathf.PerlinNoise((chunkCoordinates.x + x + xOffset) * noiseScale, (chunkCoordinates.y + z + yOffset) * noiseScale);
-                vertices[x + z * chunkSize] = new Vector3(x, height, z) + GetChunkOffset(chunkCoordinates);
+                // Calculate the distance from the center of the chunk
+                float distanceFromCenter = Mathf.Sqrt(Mathf.Pow(x - chunkSize / 2, 2) + Mathf.Pow(z - chunkSize / 2, 2));
 
-                // Calculate the triangle indices
-                if (x < chunkSize - 1 && z < chunkSize - 1)
-                {
-                    int triangleIndex = (x + z * (chunkSize - 1)) * 6;
-                    triangles[triangleIndex + 0] = x + z * chunkSize;
-                    triangles[triangleIndex + 1] = x + (z + 1) * chunkSize;
-                    triangles[triangleIndex + 2] = x + 1 + z * chunkSize;
+                // Add a value that increases with the distance from the center
+                height += maxHeight * Mathf.Clamp((distanceFromCenter - chunkSize / 4) / (chunkSize / 4), 0, 1) * heightIncrease;
+            }
+            
+            vertices[x + z * chunkSize] = new Vector3(x, height, z) + GetChunkOffset(chunkCoordinates);
 
-                    triangles[triangleIndex + 3] = x + 1 + z * chunkSize;
-                    triangles[triangleIndex + 4] = x + (z + 1) * chunkSize;
-                    triangles[triangleIndex + 5] = x + 1 + (z + 1) * chunkSize;
-                }
+            // Calculate the triangle indices
+            if (x < chunkSize - 1 && z < chunkSize - 1)
+            {
+                int triangleIndex = (x + z * (chunkSize - 1)) * 6;
+                triangles[triangleIndex + 0] = x + z * chunkSize;
+                triangles[triangleIndex + 1] = x + (z + 1) * chunkSize;
+                triangles[triangleIndex + 2] = x + 1 + z * chunkSize;
+
+                triangles[triangleIndex + 3] = x + 1 + z * chunkSize;
+                triangles[triangleIndex + 4] = x + (z + 1) * chunkSize;
+                triangles[triangleIndex + 5] = x + 1 + (z + 1) * chunkSize;
             }
         }
-
-        // Set the mesh data
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.RecalculateNormals();
-
-        MeshCollider collider = GetComponent<MeshCollider>();
-        collider.sharedMesh = mesh;
-
-        // Set the mesh filter's mesh and add the chunk to the dictionary
-        meshFilter.mesh = mesh;
-        chunks.Add(chunkCoordinates, mesh);
-
-        // Set the material color to a random color
-        meshRenderer.material.color = Random.ColorHSV();
     }
+
+    // Set the mesh data
+    mesh.vertices = vertices;
+    mesh.triangles = triangles;
+    mesh.RecalculateNormals();
+
+    MeshCollider collider = GetComponent<MeshCollider>();
+    collider.sharedMesh = mesh;
+
+    // Set the mesh filter's mesh and add the chunk to the dictionary
+    meshFilter.mesh = mesh;
+
+    Color[] colors = new Color[vertices.Length];
+    Color bottom = Random.ColorHSV();
+    Color top = Random.ColorHSV();
+    for (int i = 0; i < vertices.Length; i++)
+    {
+        // Set the color based on the height of the vertex
+        float t = Mathf.InverseLerp(0, maxHeight, vertices[i].y);
+        colors[i] = Color.Lerp(bottom, top, t);
+    }
+
+    // Assign the colors to the mesh
+    mesh.colors = colors;
+
+    // Set the material color to a random color
+    //meshRenderer.material.color = Random.ColorHSV();
+}
 
     Vector3 GetChunkOffset(Vector2Int chunkCoordinates)
     {
         return new Vector3(chunkCoordinates.x * chunkSize, 0, chunkCoordinates.y * chunkSize);
-    }
-
-    Vector2Int GetChunkCoordinates(Vector3 position)
-    {
-        return new Vector2Int(Mathf.FloorToInt(position.x / chunkSize), Mathf.FloorToInt(position.z / chunkSize));
-    }
-
-    Vector3 GetChunkCenter(Vector2Int chunkCoordinates)
-    {
-        return new Vector3(chunkCoordinates.x * chunkSize + chunkSize / 2, 0, chunkCoordinates.y * chunkSize + chunkSize / 2);
     }
 }
 

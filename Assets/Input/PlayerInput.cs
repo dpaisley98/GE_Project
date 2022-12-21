@@ -71,6 +71,15 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Interact"",
+                    ""type"": ""Button"",
+                    ""id"": ""525cf288-1716-4cdd-8344-02c2ea5247e3"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -293,6 +302,28 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""action"": ""Mouse Y"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4a1254fd-16e3-4fe1-9a5b-55edf94472b8"",
+                    ""path"": ""<Keyboard>/f"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4a02735a-8543-49ae-9f87-c1d071416f0c"",
+                    ""path"": ""<Gamepad>/buttonEast"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -306,6 +337,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
         m_Player_MouseX = m_Player.FindAction("Mouse X", throwIfNotFound: true);
         m_Player_MouseY = m_Player.FindAction("Mouse Y", throwIfNotFound: true);
+        m_Player_Interact = m_Player.FindAction("Interact", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -370,6 +402,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Jump;
     private readonly InputAction m_Player_MouseX;
     private readonly InputAction m_Player_MouseY;
+    private readonly InputAction m_Player_Interact;
     public struct PlayerActions
     {
         private @PlayerInput m_Wrapper;
@@ -379,6 +412,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         public InputAction @Jump => m_Wrapper.m_Player_Jump;
         public InputAction @MouseX => m_Wrapper.m_Player_MouseX;
         public InputAction @MouseY => m_Wrapper.m_Player_MouseY;
+        public InputAction @Interact => m_Wrapper.m_Player_Interact;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -403,6 +437,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                 @MouseY.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnMouseY;
                 @MouseY.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnMouseY;
                 @MouseY.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnMouseY;
+                @Interact.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnInteract;
+                @Interact.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnInteract;
+                @Interact.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnInteract;
             }
             m_Wrapper.m_PlayerActionsCallbackInterface = instance;
             if (instance != null)
@@ -422,6 +459,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                 @MouseY.started += instance.OnMouseY;
                 @MouseY.performed += instance.OnMouseY;
                 @MouseY.canceled += instance.OnMouseY;
+                @Interact.started += instance.OnInteract;
+                @Interact.performed += instance.OnInteract;
+                @Interact.canceled += instance.OnInteract;
             }
         }
     }
@@ -433,5 +473,6 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         void OnJump(InputAction.CallbackContext context);
         void OnMouseX(InputAction.CallbackContext context);
         void OnMouseY(InputAction.CallbackContext context);
+        void OnInteract(InputAction.CallbackContext context);
     }
 }
