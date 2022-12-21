@@ -11,11 +11,11 @@ public class PlayerInteract : MonoBehaviour
     LayerMask interactableMask;
     [SerializeField]
     GameObject player;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+
+    [SerializeField]
+    GameObject terrin;
+
+    Vector3 buttonPosition; // store the position of the button
 
     // Update is called once per frame
     void Update()
@@ -28,9 +28,36 @@ public class PlayerInteract : MonoBehaviour
             {
                 Debug.Log(hitInfo.collider.GetComponent<Interactor>().promptMessage);
                 Vector3 destinationPosition = player.transform.position;
+                TerrainGenerator terrainValue = terrin.GetComponent<TerrainGenerator>();
+                terrainValue.buttonCheck = true;
                 destinationPosition.y += 60f;
                 player.transform.position = destinationPosition;
+
+                // store the position of the button
+                buttonPosition = hitInfo.collider.transform.position;
+
+                // start the countdown co-routine
+                StartCoroutine(Countdown());
             }
+        }
+    }
+
+    IEnumerator Countdown()
+    {
+        StartCoroutine(WaitForLandGeneration());
+        // wait for a minute
+        yield return new WaitForSeconds(60f);
+
+        // move the player back to the button position
+        player.transform.position = buttonPosition;        
+    }
+
+    IEnumerator WaitForLandGeneration()
+    {
+        // wait for the land to be generated
+        while (terrin.GetComponent<TerrainGenerator>().buttonCheck)
+        {
+            yield return null;
         }
     }
 }

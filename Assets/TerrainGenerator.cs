@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class TerrainGenerator : MonoBehaviour
@@ -15,6 +13,8 @@ public class TerrainGenerator : MonoBehaviour
 
     public float heightIncrease;
 
+    public bool buttonCheck = false;
+
     // The mesh filter and renderer components
     MeshFilter meshFilter;
     MeshRenderer meshRenderer;
@@ -29,6 +29,14 @@ public class TerrainGenerator : MonoBehaviour
 
         // Generate the initial chunks of terrain
         GenerateChunk(Vector2Int.zero);
+    }
+
+    void Update()
+    {
+        if(buttonCheck){
+            GenerateChunk(Vector2Int.zero);
+            buttonCheck = false;
+        }
     }
 
 void GenerateChunk(Vector2Int chunkCoordinates)
